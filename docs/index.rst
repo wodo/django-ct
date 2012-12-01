@@ -23,6 +23,7 @@ Some Research
 * The `Slides`__ of Bill Karwin
 * A `gist`__ with a PHP implementation.
 * Optimize `Hierarchy Queries`__ with a Transitive Closure Table
+* `Hierarchy Queries`__ - Creating a Transitive Closure to Optimize Rollups (Steven F. Lott)
 
 __ http://stackoverflow.com/questions/8196175/managing-hierarchies-in-sql-mptt-nested-sets-vs-adjacency-lists-vs-storing-path
 __ http://stackoverflow.com/questions/192220/what-is-the-most-efficient-elegant-way-to-parse-a-flat-table-into-a-tree/192462#192462
@@ -33,6 +34,7 @@ __ http://b2berry.com/2011/11/19/hierarchical-data-persistence-via-closure-table
 __ http://www.slideshare.net/billkarwin/models-for-hierarchical-data
 __ http://gist.github.com/1380975
 __ http://kylecordes.com/2008/transitive-closure
+__ http://www.itmaybeahack.com/homepage/_static/transclose/transclose.html
 
 Indices and tables
 ==================
