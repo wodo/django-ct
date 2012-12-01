@@ -1,0 +1,10 @@
+# use glob syntax
+syntax: glob
+
+*.pyc
+.DS_Store
+
+syntax: regexp
+^docs/_build/.*
+^ct/.*\.py$
+^manage.py$
