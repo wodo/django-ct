@@ -102,11 +102,11 @@ and the descendants of "t" (going down) [3]_.
   AND supertree.descendant = st
 
 To move a subtree from one location in the tree to another,
-first disconnect the subtree from its ancestors by deleteing rows that reference
+first disconnect the subtree from its ancestors by deleting rows that reference
 the ancestors of the top node in the subtree and the descendants of that node.
 Make sure not to delete the self referencing row of "st".
 By selecting the ancestors of "st", but not "st" itself, and descendants of "st",
-including "st", this corectly removes all the paths from "st"'s ancestors
+including "st", this correctly removes all the paths from "st"'s ancestors
 to "st" and its descendants [4]_.
 
 ::
