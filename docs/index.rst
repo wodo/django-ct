@@ -68,7 +68,7 @@ A closure table is a way of storing hierarchies.
 It involves storing all path through the tree,
 not just those with a direct parent-child realtionship [1]_.
 
-:: 
+.. code-block:: sql
 
   ct(c)
 
@@ -81,7 +81,7 @@ not just those with a direct parent-child realtionship [1]_.
 
 To create a new node, we first insert the self referencing row [2]_.
 
-:: 
+.. code-block:: sql
 
   create(t)
   
@@ -91,7 +91,7 @@ We need to insert all the nodes of the new subtree.
 We use a Cartesian join between the ancestors of "st" (going up)
 and the descendants of "t" (going down) [3]_.
 
-::
+.. code-block:: sql
 
   connect(t, st)
 
@@ -109,7 +109,7 @@ By selecting the ancestors of "st", but not "st" itself, and descendants of "st"
 including "st", this correctly removes all the paths from "st"'s ancestors
 to "st" and its descendants [4]_.
 
-::
+.. code-block:: sql
 
   disconnect(st)
   
