@@ -117,9 +117,9 @@ to "st" and its descendants [4]_.
   WHERE descendant IN (SELECT descendant
                        FROM ct
                        WHERE ancestor = st)
-  AND ancestor NOT IN (SELECT descendant
+  AND ancestor NOT IN (SELECT ancestor
                        FROM ct
-                       WHERE ancestor = st
+                       WHERE descendant = st
                        AND ancestor != descendant)
 
 .. [1] Bill Karwin: `SQL Antipatterns`_: Avoiding the Pitfalls of Database Programming - Page 36
