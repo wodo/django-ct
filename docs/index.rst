@@ -29,7 +29,6 @@ Some Research
 * Bill Karwin: `SQL Antipatterns`__: Avoiding the Pitfalls of Database Programming
 
 __ http://www.artfulsoftware.com/mysqlbook/sampler/mysqled1ch20.html
-__ http://www.mysqlperformanceblog.com/2011/02/14/moving-subtrees-in-closure-table/
 __ http://stackoverflow.com/questions/8196175/managing-hierarchies-in-sql-mptt-nested-sets-vs-adjacency-lists-vs-storing-path
 __ http://stackoverflow.com/questions/192220/what-is-the-most-efficient-elegant-way-to-parse-a-flat-table-into-a-tree/192462#192462
 __ http://dirtsimple.org/2010/11/simplest-way-to-do-tree-based-queries.html
