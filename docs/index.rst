@@ -27,6 +27,7 @@ Some Research
 * `Hierarchy Queries`__ - Creating a Transitive Closure to Optimize Rollups (Steven F. Lott)
 * `Moving Subtrees in Closure Table Hierarchies`__
 * Bill Karwin: `SQL Antipatterns`__: Avoiding the Pitfalls of Database Programming
+* Lutz Volkmann: `Graphen an allen Ecken und Kanten`__
 
 __ http://www.artfulsoftware.com/mysqlbook/sampler/mysqled1ch20.html
 __ http://stackoverflow.com/questions/8196175/managing-hierarchies-in-sql-mptt-nested-sets-vs-adjacency-lists-vs-storing-path
@@ -41,6 +42,7 @@ __ http://kylecordes.com/2008/transitive-closure
 __ http://www.itmaybeahack.com/homepage/_static/transclose/transclose.html
 __ http://www.mysqlperformanceblog.com/2011/02/14/moving-subtrees-in-closure-table/
 __ http://www.pragprog.com/titles/bksqla/sql-antipatterns
+__ http://www.math2.rwth-aachen.de/files/gt/buch/graphen_an_allen_ecken_und_kanten.pdf
 
 Test Data Sources
 =================
