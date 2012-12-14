@@ -40,6 +40,7 @@ __ http://gist.github.com/1380975
 __ http://kylecordes.com/2008/transitive-closure
 __ http://www.itmaybeahack.com/homepage/_static/transclose/transclose.html
 __ http://www.pragprog.com/titles/bksqla/sql-antipatterns
+__ http://www.mysqlperformanceblog.com/2011/02/14/moving-subtrees-in-closure-table/
 
 Test Data Sources
 =================
