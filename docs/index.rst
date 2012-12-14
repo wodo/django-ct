@@ -150,7 +150,7 @@ referencing row of the node "st".
 
 To retrieve the descendants of a node "st", we have to match rows in "ct"
 where the ancestor is "st". The same tale as before: the node "st" is still part
-of the result if we nt use the "length" attribute for filtering out the self
+of the result if we not use the "length" attribute for filtering out the self
 referencing row of the node "st"
 
 .. code-block:: sql
@@ -162,14 +162,14 @@ referencing row of the node "st"
   WHERE ancestor = st AND length <> 0
 
 Queries for direct parent or child nodes should also use the "length" attribute in "ct".
-We know the path length of a immediate child is 1. The Searching for the
+We know the path length of a immediate child is 1. The searching for the
 direct children of "st" is now straightforward:
 
 .. code-block:: sql
 
   childs(st)
   
-  SELECT descendant
+  SELECT descendant AS child
   FROM ct
   WHERE ancestor = st AND length = 1
 
@@ -180,7 +180,7 @@ of the node "st":
 
   parents(st)
   
-  SELECT ancestor
+  SELECT ancestor AS parent
   FROM ct
   WHERE descendant = st AND length = 1
 
@@ -192,7 +192,7 @@ and we try then to find the related children.
 
   siblings(st)
 
-  SELECT DISTINCT descendant
+  SELECT DISTINCT descendant AS sibling
   FROM ct
   WHERE length = 1 AND ancestor IN (
     SELECT ancestor
@@ -207,7 +207,7 @@ lead us along the graph to the node "st".
 
   startpoints(st)
   
-  SELECT ancestor
+  SELECT ancestor AS startpoint
   FROM ct
   WHERE descendant = st AND ancestor NOT IN (
     SELECT descendant
@@ -222,7 +222,7 @@ the graph arrives after starting from the node "st".
 
   endpoints(st)
   
-  SELECT descendant
+  SELECT descendant AS endpoint
   FROM ct
   WHERE ancestor = st AND descendant NOT IN (
     SELECT ancestor
@@ -234,7 +234,7 @@ the graph arrives after starting from the node "st".
 
   sinks()
 
-  SELECT DISTINCT descendant
+  SELECT DISTINCT descendant AS sink
   FROM ct
   WHERE ancestor NOT IN (
     SELECT ancestor
@@ -244,13 +244,13 @@ the graph arrives after starting from the node "st".
 
   producer()
   
-  SELECT DISTINCT ancestor
+  SELECT DISTINCT ancestor AS producer
   FROM ct
   WHERE length <> 0
 
   consumer()
   
-  SELECT DISTINCT descendant
+  SELECT DISTINCT descendant AS consumer
   FROM ct
   WHERE length <> 0
   
@@ -258,7 +258,7 @@ the graph arrives after starting from the node "st".
 
   sources()
   
-  SELECT DISTINCT ancestor
+  SELECT DISTINCT ancestor AS source
   FROM ct
   WHERE ancestor NOT IN (
     SELECT  descendant
@@ -268,24 +268,24 @@ the graph arrives after starting from the node "st".
  
   indegree(st)
 
-  SELECT COUNT(ancestor)
+  SELECT COUNT(ancestor) AS indegree
   FROM ct
   WHERE descendant = st and length = 1
 
   outdegree(st)
 
-  SELECT COUNT(descendant)
+  SELECT COUNT(descendant) AS outdegree
   FROM ct
   WHERE ancestor = st and length = 1
   
   nodes()
   
-  SELECT DISTINCT ancestor
+  SELECT DISTINCT ancestor AS node
   FROM ct
   
   args()
 
-  SELECT ancestor, descendant
+  SELECT ancestor AS tail, descendant AS head
   FROM ct
   WHERE length = 1 
 
