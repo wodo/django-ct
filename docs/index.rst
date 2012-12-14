@@ -51,21 +51,21 @@ Requirements
 ============
 
 * Every class "C" is associated with one ore more closure table classes "C.CTn"
-* There is a possibility to manage more the one tree "T" inside of one closure table "C.CTn".
+* There is a possibility to manage more then one tree "T" inside of one closure table "C.CTn".
 * | Every new instance "I" of "C" will be automatically added to its associated closure tables "C.CTn"
   | (Building a tree "T" with one node. The root node)
 * An instance "I" of "C" always has at least one reference in its closure table "C.CTn". 
 * | When a instance "I" of "C" is deleted, all references to "I" in "C.CTn" are be deleted too.
   | (The tree structure is preserved)
 * We need a ability to connect a tree "T" with a subtree "ST".
-* | We need a ability to isolate a subtree "ST" from its tree "T".
+* | We need a ability to disconnect a subtree "ST" from its tree "T".
   | (This generates a new tree)
 
 SQL Snippets
 ============
 
-A closure table is a way of storing hierarchies.
-It involves storing all path through the tree,
+A closure table is a way of storing hierarchies (Tree's or DAG's).
+It involves storing all path through the graph,
 not just those with a direct parent-child realtionship [1]_.
 
 .. code-block:: sql
@@ -88,7 +88,7 @@ To create a new node, we first insert the self referencing row [2]_.
   INSERT INTO ct (ancestor, descendant) VALUES (t,t)
 
 We need to insert all the nodes of the new subtree.
-We use a Cartesian join between the ancestors of "st" (going up)
+We use a cartesian join between the ancestors of "st" (going up)
 and the descendants of "t" (going down) [3]_.
 
 .. code-block:: sql
@@ -101,8 +101,7 @@ and the descendants of "t" (going down) [3]_.
   WHERE subtree.ancestor = t
   AND supertree.descendant = st
 
-To move a subtree from one location in the tree to another,
-first disconnect the subtree from its ancestors by deleting rows that reference
+For disconnecting the subtree from its ancestors we delete rows that reference
 the ancestors of the top node in the subtree and the descendants of that node.
 Make sure not to delete the self referencing row of "st".
 By selecting the ancestors of "st", but not "st" itself, and descendants of "st",
@@ -122,6 +121,8 @@ to "st" and its descendants [4]_.
                    WHERE descendant = st
                    AND ancestor != descendant)
 
+.. rubric:: Footnotes
+
 .. [1] Bill Karwin: `SQL Antipatterns`_: Avoiding the Pitfalls of Database Programming - Page 36
 .. [2] Bill Karwin: `SQL Antipatterns`_: Avoiding the Pitfalls of Database Programming - Page 38
 .. [3] Bill Karwin: `Moving Subtrees in Closure Table Hierarchies`__
@@ -130,6 +131,163 @@ __ http://www.mysqlperformanceblog.com/2011/02/14/moving-subtrees-in-closure-tab
 .. _`SQL Antipatterns`: http://www.pragprog.com/titles/bksqla/sql-antipatterns
 
 Many thanks to Bill Karwin for these beautiful "how to implements a closure table" ideas.
+
+Queries for DAG-shaped Hierarchies
+==================================
+
+To retrieve the ancestors of a node "st", we have to match rows in "ct"
+where the descendant is "st". However the node "st" is still part of the result.
+To solve this we use the "length" attribute of "ct" to filter out the self
+referencing row of the node "st".
+
+.. code-block:: sql
+
+  ancestors(st)
+
+  SELECT ancestor
+  FROM ct
+  WHERE descendant = st AND length <> 0
+
+To retrieve the descendants of a node "st", we have to match rows in "ct"
+where the ancestor is "st". The same tale as before: the node "st" is still part
+of the result if we nt use the "length" attribute for filtering out the self
+referencing row of the node "st"
+
+.. code-block:: sql
+
+  descendants(st)
+
+  SELECT descendant
+  FROM ct
+  WHERE ancestor = st AND length <> 0
+
+Queries for direct parent or child nodes should also use the "length" attribute in "ct".
+We know the path length of a immediate child is 1. The Searching for the
+direct children of "st" is now straightforward:
+
+.. code-block:: sql
+
+  childs(st)
+  
+  SELECT descendant
+  FROM ct
+  WHERE ancestor = st AND length = 1
+
+Adjusted accordingly we can use the same method to find the parents
+of the node "st":
+
+.. code-block:: sql
+
+  parents(st)
+  
+  SELECT ancestor
+  FROM ct
+  WHERE descendant = st AND length = 1
+
+Nodes having the same parents, are usually known as siblings.
+We can search siblings with a nested query. First we search the parents
+and we try then to find the related children.
+
+.. code-block:: sql
+
+  siblings(st)
+
+  SELECT DISTINCT descendant
+  FROM ct
+  WHERE length = 1 AND ancestor IN (
+    SELECT ancestor
+    FROM ct
+    WHERE descendant = st and length = 1
+  )
+  
+With the following query, we are able to retrieve those starting points, which
+lead us along the graph to the node "st".  
+
+.. code-block:: sql
+
+  startpoints(st)
+  
+  SELECT ancestor
+  FROM ct
+  WHERE descendant = st AND ancestor NOT IN (
+    SELECT descendant
+    FROM ct
+    WHERE length <> 0
+  )
+
+With the following query, we are able to retrieve the end points, where
+the graph arrives after starting from the node "st".
+
+.. code-block:: sql
+
+  endpoints(st)
+  
+  SELECT descendant
+  FROM ct
+  WHERE ancestor = st AND descendant NOT IN (
+    SELECT ancestor
+    FROM ct
+    WHERE length <> 0
+  )
+
+.. code-block:: sql
+
+  sinks()
+
+  SELECT DISTINCT descendant
+  FROM ct
+  WHERE ancestor NOT IN (
+    SELECT ancestor
+    FROM ct
+    WHERE length <> 0
+  )
+
+  producer()
+  
+  SELECT DISTINCT ancestor
+  FROM ct
+  WHERE length <> 0
+
+  consumer()
+  
+  SELECT DISTINCT descendant
+  FROM ct
+  WHERE length <> 0
+  
+.. code-block:: sql
+
+  sources()
+  
+  SELECT DISTINCT ancestor
+  FROM ct
+  WHERE ancestor NOT IN (
+    SELECT  descendant
+    FROM ct
+    WHERE length <> 0
+  )
+ 
+  indegree(st)
+
+  SELECT COUNT(ancestor)
+  FROM ct
+  WHERE descendant = st and length = 1
+
+  outdegree(st)
+
+  SELECT COUNT(descendant)
+  FROM ct
+  WHERE ancestor = st and length = 1
+  
+  nodes()
+  
+  SELECT DISTINCT ancestor
+  FROM ct
+  
+  args()
+
+  SELECT ancestor, descendant
+  FROM ct
+  WHERE length = 1 
 
 Indices and tables
 ==================
