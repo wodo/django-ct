@@ -27,7 +27,7 @@ Some Research
 * `Hierarchy Queries`__ - Creating a Transitive Closure to Optimize Rollups (Steven F. Lott)
 * `Moving Subtrees in Closure Table Hierarchies`__
 * Bill Karwin: `SQL Antipatterns`__: Avoiding the Pitfalls of Database Programming
-* Lutz Volkmann: `Graphen an allen Ecken und Kanten`__
+* Robert Sedgewick, Kevin Wayne: `Directed Graphs`__ and some `Slides`__
 
 __ http://www.artfulsoftware.com/mysqlbook/sampler/mysqled1ch20.html
 __ http://stackoverflow.com/questions/8196175/managing-hierarchies-in-sql-mptt-nested-sets-vs-adjacency-lists-vs-storing-path
@@ -42,7 +42,8 @@ __ http://kylecordes.com/2008/transitive-closure
 __ http://www.itmaybeahack.com/homepage/_static/transclose/transclose.html
 __ http://www.mysqlperformanceblog.com/2011/02/14/moving-subtrees-in-closure-table/
 __ http://www.pragprog.com/titles/bksqla/sql-antipatterns
-__ http://www.math2.rwth-aachen.de/files/gt/buch/graphen_an_allen_ecken_und_kanten.pdf
+__ http://algs4.cs.princeton.edu/42directed/
+__ http://www.cs.princeton.edu/~rs/AlgsDS07/13DirectedGraphs.pdf
 
 Test Data Sources
 =================
@@ -68,7 +69,7 @@ Requirements
 SQL Snippets
 ============
 
-A closure table is a way of storing hierarchies (Tree's or DAG's).
+A closure table is a way of storing hierarchies (Digraph's).
 It involves storing all path through the graph,
 not just those with a direct parent-child realtionship [1]_.
 
@@ -105,39 +106,49 @@ and the descendants of "t" (going down) [3]_.
   WHERE subtree.ancestor = t
   AND supertree.descendant = st
 
+But it is not possible to connect every tree with any other subtree.
+The definition of our ct do not allow duplicate edges.
+Therefore the intersection of already existing edges and new edges must be empty.
+
+.. code-block:: sql
+
+  check(t, st)
+
+    SELECT ancestor, descendant
+    FROM ct 
+  INTERSECT
+    SELECT supertree.ancestor, subtree.descendant
+    FROM ct AS supertree JOIN ct AS subtree
+    WHERE subtree.ancestor = t
+    AND supertree.descendant = st
+
 For disconnecting the subtree from its ancestors we delete rows that reference
 the ancestors of the top node in the subtree and the descendants of that node.
 Make sure not to delete the self referencing row of "st".
 By selecting the ancestors of "st", but not "st" itself, and descendants of "st",
 including "st", this correctly removes all the paths from "st"'s ancestors
-to "st" and its descendants [4]_.
+to "st" and its descendants [3]_.
 
 .. code-block:: sql
 
   disconnect(st)
   
   DELETE FROM ct
-  WHERE descendant IN (SELECT descendant
-                       FROM ct
-                       WHERE ancestor = st)
-  AND ancestor IN (SELECT ancestor
-                   FROM ct
-                   WHERE descendant = st
-                   AND ancestor != descendant)
+  WHERE descendant IN (SELECT descendant FROM ct WHERE ancestor = st)
+  AND ancestor NOT IN (SELECT descendant FROM ct WHERE ancestor = st)
 
 .. rubric:: Footnotes
 
 .. [1] Bill Karwin: `SQL Antipatterns`_: Avoiding the Pitfalls of Database Programming - Page 36
 .. [2] Bill Karwin: `SQL Antipatterns`_: Avoiding the Pitfalls of Database Programming - Page 38
 .. [3] Bill Karwin: `Moving Subtrees in Closure Table Hierarchies`__
-.. [4] Bill Karwin: `SQL Antipatterns`_: Avoiding the Pitfalls of Database Programming - Page 39
 __ http://www.mysqlperformanceblog.com/2011/02/14/moving-subtrees-in-closure-table/
 .. _`SQL Antipatterns`: http://www.pragprog.com/titles/bksqla/sql-antipatterns
 
 Many thanks to Bill Karwin for these beautiful "how to implements a closure table" ideas.
 
-Queries for DAG-shaped Hierarchies
-==================================
+Queries for Digraph-shaped Hierarchies
+======================================
 
 To retrieve the ancestors of a node "st", we have to match rows in "ct"
 where the descendant is "st". However the node "st" is still part of the result.
@@ -165,38 +176,39 @@ referencing row of the node "st"
   FROM ct
   WHERE ancestor = st AND length <> 0
 
-Queries for direct parent or child nodes should also use the "length" attribute in "ct".
-We know the path length of a immediate child is 1. The searching for the
-direct children of "st" is now straightforward:
+Queries for direct predecessor or successor nodes should also use the "length" attribute in "ct".
+We know the path length of a immediate successor is 1. The searching for the
+direct successors of "st" is now straightforward:
 
 .. code-block:: sql
 
-  childs(st)
+  successors(st)
   
-  SELECT descendant AS child
+  SELECT descendant AS successor
   FROM ct
   WHERE ancestor = st AND length = 1
 
-Adjusted accordingly we can use the same method to find the parents
+Adjusted accordingly we can use the same method to find the predecessors
 of the node "st":
 
 .. code-block:: sql
 
-  parents(st)
+  predecessors(st)
   
-  SELECT ancestor AS parent
+  SELECT ancestor AS predecessor
   FROM ct
   WHERE descendant = st AND length = 1
 
 Nodes having the same parents, are usually known as siblings.
-We can search siblings with a nested query. First we search the parents
-and we try then to find the related children.
+We call this kind of relationship corporation.
+We can search the members of an corporation with a nested query. First we search the predecessors
+and second we try then to find the related successors.
 
 .. code-block:: sql
 
-  siblings(st)
+  corporation(st)
 
-  SELECT DISTINCT descendant AS sibling
+  SELECT DISTINCT descendant AS member
   FROM ct
   WHERE length = 1 AND ancestor IN (
     SELECT ancestor
@@ -234,6 +246,28 @@ the graph arrives after starting from the node "st".
     WHERE length <> 0
   )
 
+A node is called a producer if he is an ancestor of another node
+
+.. code-block:: sql
+
+  producer()
+  
+  SELECT DISTINCT ancestor AS producer
+  FROM ct
+  WHERE length <> 0
+
+A node is called a consumer if he is an descendant of another node
+
+.. code-block:: sql
+
+  consumer()
+  
+  SELECT DISTINCT descendant AS consumer
+  FROM ct
+  WHERE length <> 0
+  
+A node which is a consumer but not a producer is called a sink.
+
 .. code-block:: sql
 
   sinks()
@@ -246,18 +280,8 @@ the graph arrives after starting from the node "st".
     WHERE length <> 0
   )
 
-  producer()
-  
-  SELECT DISTINCT ancestor AS producer
-  FROM ct
-  WHERE length <> 0
+A node which is a producer but not a consumer is called a source.
 
-  consumer()
-  
-  SELECT DISTINCT descendant AS consumer
-  FROM ct
-  WHERE length <> 0
-  
 .. code-block:: sql
 
   sources()
@@ -270,11 +294,19 @@ the graph arrives after starting from the node "st".
     WHERE length <> 0
   )
  
+The number of head endpoints adjacent to a node is called the indegree of the node.
+
+.. code-block:: sql
+
   indegree(st)
 
   SELECT COUNT(ancestor) AS indegree
   FROM ct
   WHERE descendant = st and length = 1
+
+The number of tail endpoints adjacent to a node is called its outdegree.
+
+.. code-block:: sql
 
   outdegree(st)
 
@@ -282,11 +314,20 @@ the graph arrives after starting from the node "st".
   FROM ct
   WHERE ancestor = st and length = 1
   
+Every node in "ct" is defined over its self referencing row.
+
+.. code-block:: sql
+
   nodes()
   
-  SELECT DISTINCT ancestor AS node
+  SELECT ancestor AS node
   FROM ct
+  WHERE ancestor = descendant
   
+We can retrieve a list of direct connections between the nodes.
+
+.. code-block:: sql
+
   args()
 
   SELECT ancestor AS tail, descendant AS head
