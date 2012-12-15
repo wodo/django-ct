@@ -122,12 +122,7 @@ Therefore the intersection of already existing edges and new edges must be empty
     WHERE subtree.ancestor = t
     AND supertree.descendant = st
 
-For disconnecting the subtree from its ancestors we delete rows that reference
-the ancestors of the top node in the subtree and the descendants of that node.
-Make sure not to delete the self referencing row of "st".
-By selecting the ancestors of "st", but not "st" itself, and descendants of "st",
-including "st", this correctly removes all the paths from "st"'s ancestors
-to "st" and its descendants [3]_.
+We disconnecting the subtree from all notes which are not descendants of "st" [3]_.
 
 .. code-block:: sql
 
