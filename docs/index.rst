@@ -112,7 +112,7 @@ Therefore the intersection of already existing edges and new edges must be empty
 
 .. code-block:: sql
 
-  check(t, st)
+  checkA(t, st)
 
     SELECT ancestor, descendant
     FROM ct 
@@ -132,6 +132,18 @@ We disconnecting the subtree from all notes which are not descendants of "st" [3
   WHERE descendant IN (SELECT descendant FROM ct WHERE ancestor = st)
   AND ancestor NOT IN (SELECT descendant FROM ct WHERE ancestor = st)
 
+| A subtree is considered disconnected if the following query returns no result.
+| What kind of graph would occur, if this test would be carried out for each "t" before connect it to "st"?
+
+.. code-block:: sql
+
+  checkB(st)
+
+  SELECT ancestor, descendant
+  FROM ct
+  WHERE descendant IN (SELECT descendant FROM ct WHERE ancestor = st)
+  AND ancestor NOT IN (SELECT descendant FROM ct WHERE ancestor = st)
+
 .. rubric:: Footnotes
 
 .. [1] Bill Karwin: `SQL Antipatterns`_: Avoiding the Pitfalls of Database Programming - Page 36
@@ -147,8 +159,7 @@ Queries for Digraph-shaped Hierarchies
 
 To retrieve the ancestors of a node "st", we have to match rows in "ct"
 where the descendant is "st". However the node "st" is still part of the result.
-To solve this we use the "length" attribute of "ct" to filter out the self
-referencing row of the node "st".
+To solve this we filter out the self referencing row of the node "st".
 
 .. code-block:: sql
 
@@ -156,12 +167,11 @@ referencing row of the node "st".
 
   SELECT ancestor
   FROM ct
-  WHERE descendant = st AND length <> 0
+  WHERE descendant = st AND ancestor <> descendant
 
 To retrieve the descendants of a node "st", we have to match rows in "ct"
 where the ancestor is "st". The same tale as before: the node "st" is still part
-of the result if we not use the "length" attribute for filtering out the self
-referencing row of the node "st"
+of the result if we not filtering out the self referencing row of the node "st"
 
 .. code-block:: sql
 
@@ -169,7 +179,7 @@ referencing row of the node "st"
 
   SELECT descendant
   FROM ct
-  WHERE ancestor = st AND length <> 0
+  WHERE ancestor = st AND length ancestor <> descendant
 
 Queries for direct predecessor or successor nodes should also use the "length" attribute in "ct".
 We know the path length of a immediate successor is 1. The searching for the
@@ -194,10 +204,11 @@ of the node "st":
   FROM ct
   WHERE descendant = st AND length = 1
 
-Nodes having the same parents, are usually known as siblings.
-We call this kind of relationship corporation.
-We can search the members of an corporation with a nested query. First we search the predecessors
-and second we try then to find the related successors.
+Childs having the same parents, are usually known as siblings.
+In our graph, we call this kind of relationship corporation.
+We can search the members of an corporation with a nested query.
+First we search the predecessors and second we try then to find
+the related successors.
 
 .. code-block:: sql
 
@@ -223,11 +234,11 @@ lead us along the graph to the node "st".
   WHERE descendant = st AND ancestor NOT IN (
     SELECT descendant
     FROM ct
-    WHERE length <> 0
+    WHERE length ancestor <> descendant
   )
 
 With the following query, we are able to retrieve the end points, where
-the graph arrives after starting from the node "st".
+the graph arrives after starting the traverse from the node "st".
 
 .. code-block:: sql
 
@@ -238,7 +249,7 @@ the graph arrives after starting from the node "st".
   WHERE ancestor = st AND descendant NOT IN (
     SELECT ancestor
     FROM ct
-    WHERE length <> 0
+    WHERE length ancestor <> descendant
   )
 
 A node is called a producer if he is an ancestor of another node
@@ -249,7 +260,7 @@ A node is called a producer if he is an ancestor of another node
   
   SELECT DISTINCT ancestor AS producer
   FROM ct
-  WHERE length <> 0
+  WHERE length ancestor <> descendant
 
 A node is called a consumer if he is an descendant of another node
 
@@ -259,7 +270,7 @@ A node is called a consumer if he is an descendant of another node
   
   SELECT DISTINCT descendant AS consumer
   FROM ct
-  WHERE length <> 0
+  WHERE length ancestor <> descendant
   
 A node which is a consumer but not a producer is called a sink.
 
@@ -272,7 +283,7 @@ A node which is a consumer but not a producer is called a sink.
   WHERE ancestor NOT IN (
     SELECT ancestor
     FROM ct
-    WHERE length <> 0
+    WHERE length ancestor <> descendant
   )
 
 A node which is a producer but not a consumer is called a source.
@@ -286,7 +297,7 @@ A node which is a producer but not a consumer is called a source.
   WHERE ancestor NOT IN (
     SELECT  descendant
     FROM ct
-    WHERE length <> 0
+    WHERE length ancestor <> descendant
   )
  
 The number of head endpoints adjacent to a node is called the indegree of the node.
