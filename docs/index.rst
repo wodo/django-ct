@@ -92,7 +92,7 @@ To create a new node, we first insert the self referencing row [2]_.
   
   INSERT INTO ct (ancestor, descendant) VALUES (t,t)
 
-We need to insert all the nodes of the new subtree.
+We need to insert all the nodes of the new subtree "st".
 We use a cartesian join between the ancestors of "st" (going up)
 and the descendants of "t" (going down) [3]_.
 
@@ -132,8 +132,8 @@ We disconnecting the subtree from all notes which are not descendants of "st" [3
   WHERE descendant IN (SELECT descendant FROM ct WHERE ancestor = st)
   AND ancestor NOT IN (SELECT descendant FROM ct WHERE ancestor = st)
 
-| A subtree is considered disconnected if the following query returns no result.
-| What kind of graph would occur, if this test would be carried out for each "t" before connect it to "st"?
+A subtree is considered disconnected if the following query returns no result.
+The parameter "t" in "connect" should be checked against this query.
 
 .. code-block:: sql
 
@@ -143,6 +143,13 @@ We disconnecting the subtree from all notes which are not descendants of "st" [3
   FROM ct
   WHERE descendant IN (SELECT descendant FROM ct WHERE ancestor = st)
   AND ancestor NOT IN (SELECT descendant FROM ct WHERE ancestor = st)
+
+.. rubric:: Assumption
+
+The application of the checks A and B resulting in digraphs, with special
+properties. Such a digraph has exactly one starting point. Each additional
+node has exactly one predecessor. There is no way for cycles. With this,
+the conditions for a data structure named "tree" is given.
 
 .. rubric:: Footnotes
 
