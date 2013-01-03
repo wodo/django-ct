@@ -6,5 +6,3 @@ syntax: glob
 
 syntax: regexp
 ^docs/_build/.*
-^ct/.*\.py$
-^manage.py$
