@@ -4,9 +4,9 @@ from ct.manager import ClassManager, InstanceManager
 
 class ModelTest(TestCase):
 	fixtures = ['chapter.json',]
-	
+
 	def test_ctModel(self):
-		'''
+		"""
 			We have to check about something like:
 			
 			CREATE TABLE "tests_topic_ct_index" (
@@ -17,7 +17,7 @@ class ModelTest(TestCase):
     			
     			UNIQUE ("ancestor", "descendant")
 			)
-		'''
+		"""
 		# Check table name
 		self.assertEqual(Topic.index._ctModel._meta.db_table, 'tests_topic_ct_index')
 

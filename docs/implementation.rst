@@ -126,5 +126,13 @@ With this django-ct can provide two different kind of API's. If we use the ``ind
 like a class property the API will be provided by a ``ClassManager``. If we use the ``index``
 attribute like a instance property the API will be provided by a ``InstanceManager``.
 
-.. literalinclude:: ../tests/doctest_manager.txt
-    :language: python
+.. code::
+
+    $ python manage.py shell
+    >>> from tests.models import Topic
+    >>> type(Topic.index)
+    <class 'ct.manager.ClassManager'>
+    >>> a = Topic.objects.get(pk=1)
+    >>> type(a.index)
+    <class 'ct.manager.InstanceManager'>
+    >>> exit()
