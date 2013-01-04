@@ -24,20 +24,17 @@ That's enough to get everything configured. From there, the framework is able to
 a model behind the scenes to store the closure table entries and the ``index`` attribute
 can be used to access those information using the API methods of django-ct.
 
-Overview of the Process
------------------------
-
 The whole registration of the manager begins by assigning a ``ClosureTable`` object to
 a model, so that's a good place to start defining code. There are a number of things that
 have to happen in sequence to get the closure table system initialized for a particular
 model; at a high level ``ClosureTable`` manages the following tasks:
 
-* Register signal handlers to execute when the original model is saved.
-  These in turn add new rows to the closure table each time a new instance of the model
-  is saved.
 * Create a model for the requested closure table in a way that the foreign keys
   from this table referencing the related objects in the original
   model (``create_model()``).
+* Register signal handlers to execute when the original model is saved.
+  These in turn add new rows to the closure table each time a new instance of the model
+  is saved.
 * Assign a descriptor to the original model, using the attribute name where the
   ``ClosureTable`` was assigned. This descriptor will forward the work to a
   ``InstanceManager`` object or a ``ClassManager`` object.
