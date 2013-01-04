@@ -1,0 +1,6 @@
+>>> from tests.models import Topic
+>>> type(Topic.index)
+<class 'ct.manager.ClassManager'>
+>>> a = Topic.objects.get(pk=1)
+>>> type(a.index)
+<class 'ct.manager.InstanceManager'>

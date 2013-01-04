@@ -3,6 +3,8 @@ syntax: glob
 
 *.pyc
 .DS_Store
+.coverage
 
 syntax: regexp
 ^docs/_build/.*
+^htmlcov/.*

@@ -1,9 +1,12 @@
 from django.db import models
-from ct import manager
+from ct.manager import Descriptor
 
 __all__ = ['ClosureTable',]
 
 class ClosureTable(object):
+
+    def __init__(self):
+        self.descriptor = Descriptor
 
     def contribute_to_class(self, cls, name):
         self.name = name
@@ -16,7 +19,7 @@ class ClosureTable(object):
         # so the signal handler can't use weak references.
         models.signals.post_save.connect(self.post_save, sender=sender, weak=False)
 
-        descriptor = manager.Descriptor(self.ctModel)
+        descriptor = self.descriptor(self.ctModel)
         setattr(sender, self.name, descriptor)  
 
     def create_model(self, model):
@@ -37,13 +40,14 @@ class ClosureTable(object):
             'descendant' : models.ForeignKey(model, related_name='+',
                                              on_delete=models.CASCADE,
                                              blank=False, null=False),
-            'path_length' : models.PositiveIntegerField(blank=False, null=False),
+            'path_length' : models.PositiveIntegerField(default=0,
+                                                        blank=False, null=False),
         }
-    
+
     def get_options(self, model):
         return { 'unique_together' : ('ancestor', 'descendant'), }
-    
-    def post_save(self, sender, instance, created, **kwargs):
-        if created:
+
+    def post_save(self, sender, instance, created, raw, **kwargs):
+        if not raw and created:
             node = self.ctModel(ancestor=instance, descendant=instance, path_length=0)
             node.save()
